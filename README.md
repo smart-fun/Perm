@@ -1,6 +1,6 @@
 #Perm for Android#
 
-**Perm** is library that makes it simple to **check and request Android Permissions** at runtime (like Camera or GPS) for Apps that target Android 6 or more.
+**Perm** is a library that makes it simple to **check and request Android Permissions** at runtime (like Camera or GPS) for Apps targetting Android 6 or more.
 
 ## Usage ##
 
