@@ -50,6 +50,19 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
 }
 ```
 
+Don't forget to add the required permissions in your **AndroidManifest.xml** file! For example
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.mycompany.myapp">
+
+    <uses-permission
+        android:name="android.permission.CAMERA"
+        android:required="false" />
+    ...
+```
+
 ## Installation with gradle
 
 Add the following maven{} line to your **PROJECT** build.gradle file
