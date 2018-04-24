@@ -2,15 +2,18 @@
 
 **Perm** is a library that makes it simple to **check and request Android Permissions** at runtime (like Camera or GPS) for Apps targetting Android 6 or more.
 
+Note that since version 1.1.1 of the library it is possible to request **several Permissions** at the same time.
+
 ## Usage ##
 
-To Check and Request a permission, simply create a **Perm** instance, and use **isGranted**, **isDenied** or **askPermission** methods:
+To Check and Request permissions, simply create a **Perm** instance, and use **isGranted()**, **areGranted()**, **isDenied()**, **areDenied()**, or **askPermissions()** methods:
 
 ```java
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PERMISSION_CAMERA_REQUEST = 1;
+    private static final int PERMISSIONS_REQUEST = 1;
+    private static final String PERMISSIONS[] = {Manifest.permission.CAMERA, Manifest.permission.READ_CONTACTS};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,49 +21,50 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.main_activity);
 
-        Perm cameraPermission = new Perm(this, Manifest.permission.CAMERA);
-        if (cameraPermission.isGranted()) {
-            Toast.makeText(this, "Camera Permission already granted", Toast.LENGTH_LONG).show();
-        } else if (cameraPermission.isDenied()) {
-            Toast.makeText(this, "Camera Permission already denied", Toast.LENGTH_LONG).show();
+        final Perm perm = new Perm(this, PERMISSIONS);
+        if (perm.areGranted()) {
+            Toast.makeText(this, "All Permissions granted", Toast.LENGTH_LONG).show();
         } else {
-            cameraPermission.askPermission(PERMISSION_CAMERA_REQUEST);
+            perm.askPermissions(PERMISSIONS_REQUEST);
         }
     }
 }
 ```
 
-To handle the result of the request, create a **PermResult** in the **onRequestPermissionsResult** of your Activity, and use **isGranted**, or **isDenied** methods.
+To handle the result of the request, create a **PermResult** in the **onRequestPermissionsResult** of your Activity, and use **isGranted()**, **areGranted()**, **isDenied()**, **areDenied()**, or **areCancelled()** methods.
 
 ```java
-@Override
-public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    if (requestCode == PERMISSION_CAMERA_REQUEST) {
-        PermResult cameraPermissionResult = new PermResult(permissions, grantResults);
-        if (cameraPermissionResult.isGranted()) {
-            Toast.makeText(this, "Camera Permission granted", Toast.LENGTH_LONG).show();
-        } else if (cameraPermissionResult.isDenied()) {
-            Toast.makeText(this, "Camera Permission denied", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Camera Permission cancelled", Toast.LENGTH_LONG).show();
+        if (requestCode == PERMISSIONS_REQUEST) {
+            PermResult permResult = new PermResult(permissions, grantResults);
+            if (permResult.areCancelled()) {
+                Toast.makeText(this, "Permission process cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                for (String permission : PERMISSIONS) {
+                    if (permResult.isGranted(permission)) {
+                        Toast.makeText(this, permission + " granted", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, permission + " denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
         }
+
     }
-}
 ```
 
 Don't forget to add the required permissions in your **AndroidManifest.xml** file! For example
 
 ```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mycompany.myapp">
-
     <uses-permission
         android:name="android.permission.CAMERA"
         android:required="false" />
-    ...
+        
+    <uses-permission
+        android:name="android.permission.READ_CONTACTS" />
 ```
 
 ## Installation with gradle
@@ -80,13 +84,13 @@ Add the libary dependency to your **APP** build.gradle file
 
 ```
 dependencies {
-    compile 'com.github.smart-fun:Perm:1.0.1'    // add this line
+    implement 'com.github.smart-fun:Perm:1.1.1'    // add this line
 }
 ```
 
 ##License##
 
-Copyright 2016 Arnaud Guyon
+Copyright 2016-2018 Arnaud Guyon
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
