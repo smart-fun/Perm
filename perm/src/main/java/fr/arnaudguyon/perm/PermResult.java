@@ -78,6 +78,7 @@ public class PermResult {
                 } else {
                     result.setResultValue(DENIED);
                 }
+                mResults.put(permissionName, result);
             }
         }
     }
