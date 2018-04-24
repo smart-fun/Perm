@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Arnaud Guyon
+    Copyright 2016-2018 Arnaud Guyon
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 
 /**
  * Helper to Check or Request Android Permissions
@@ -28,7 +29,7 @@ import android.support.v4.content.ContextCompat;
 public class Perm {
 
     private Activity mActivity;
-    private String mName;
+    private String[] mNames;
 
     /**
      * Exception eventually thrown
@@ -45,40 +46,76 @@ public class Perm {
 
     /**
      * Constructor
-     * @param activity an Activity
+     *
+     * @param activity          an Activity
      * @param androidPermission Android Permission like Manifest.permission.CAMERA or Manifest.permission.ACCESS_FINE_LOCATION
      */
-    public Perm(@NonNull Activity activity, @NonNull String androidPermission) {
-        if (!androidPermission.startsWith("android.permission.")) {
-            throw new PermException("Perm " + androidPermission + " is not an Android permission");
+    public Perm(@NonNull Activity activity, @NonNull String... androidPermission) {
+        if (androidPermission.length == 0) {
+            throw new PermException("Provide at least 1 Android permission");
+        } else {
+            for (String permissionName : androidPermission) {
+                checkPermissionName(permissionName);
+            }
         }
         mActivity = activity;
-        mName = androidPermission;
+        mNames = androidPermission;
     }
 
     /**
-     *
-     * @return true if the Permission is already Granted
+     * @return true if the all the Permissions are already Granted
      */
-    public boolean isGranted() {
-        return (ContextCompat.checkSelfPermission(mActivity, mName) == PackageManager.PERMISSION_GRANTED);
+    public boolean areGranted() {
+        for (String permission : mNames) {
+            if (ContextCompat.checkSelfPermission(mActivity, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
-     *
+     * @return true if the Permission permissionName is already Granted
+     */
+    public boolean isGranted(@NonNull String permissionName) {
+        checkPermissionName(permissionName);
+        return (ContextCompat.checkSelfPermission(mActivity, permissionName) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    /**
+     * @return true if all the Permissions are already Denied
+     */
+    public boolean areDenied() {
+        for (String permissionName : mNames) {
+            if (!isDenied(permissionName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * @return true if the Permission is already Denied
      */
-    public boolean isDenied() {
-        return ((ContextCompat.checkSelfPermission(mActivity, mName) == PackageManager.PERMISSION_DENIED)
-                && ActivityCompat.shouldShowRequestPermissionRationale(mActivity, mName));
+    public boolean isDenied(@NonNull String permissionName) {
+        checkPermissionName(permissionName);
+        return ((ContextCompat.checkSelfPermission(mActivity, permissionName) == PackageManager.PERMISSION_DENIED)
+                && ActivityCompat.shouldShowRequestPermissionRationale(mActivity, permissionName));
     }
 
     /**
-     * Requests an Android permission. The response will be send to the onRequestPermissionsResult method of the mActivity
+     * Requests an Android permissions. The response will be send to the onRequestPermissionsResult method of the mActivity
+     *
      * @param requestCode user code that could be useful to differentiate several requests
      */
-    public void askPermission(int requestCode) {
-        ActivityCompat.requestPermissions(mActivity, new String[]{mName}, requestCode);
+    public void askPermissions(int requestCode) {
+        ActivityCompat.requestPermissions(mActivity, mNames, requestCode);
+    }
+
+    private void checkPermissionName(String permissionName) {
+        if (TextUtils.isEmpty(permissionName) || !permissionName.startsWith("android.permission.")) {
+            throw new PermException("Perm " + permissionName + " is not an Android permission");
+        }
     }
 
 }

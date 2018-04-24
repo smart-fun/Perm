@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Arnaud Guyon
+    Copyright 2016-2018 Arnaud Guyon
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 package fr.arnaudguyon.perm;
 
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 
-import static fr.arnaudguyon.perm.PermResult.Result.CANCELLED;
-import static fr.arnaudguyon.perm.PermResult.Result.DENIED;
-import static fr.arnaudguyon.perm.PermResult.Result.GRANTED;
+import java.util.HashMap;
+
+import static fr.arnaudguyon.perm.PermResult.ResultValue.CANCELLED;
+import static fr.arnaudguyon.perm.PermResult.ResultValue.DENIED;
+import static fr.arnaudguyon.perm.PermResult.ResultValue.GRANTED;
 
 /**
  * Helper to analyse teh result of a Permission request
@@ -27,13 +30,32 @@ import static fr.arnaudguyon.perm.PermResult.Result.GRANTED;
 
 public class PermResult {
 
-    enum Result {
+    public enum ResultValue {
         CANCELLED,
         GRANTED,
         DENIED
     }
 
-    private Result mResult;
+    private class Result {
+        private String mPermissionName;
+        private int mRawResult;
+        private ResultValue mResultValue;
+        Result(String permissionName, int rawResult) {
+            mPermissionName = permissionName;
+            mRawResult = rawResult;
+        }
+        private boolean isGranted() {
+            return (mResultValue == GRANTED);
+        }
+        private boolean isDenied() {
+            return (mResultValue == DENIED);
+        }
+        private void setResultValue(@NonNull ResultValue resultValue) {
+            mResultValue = resultValue;
+        }
+    }
+
+    private HashMap<String, Result> mResults;
 
     private PermResult() {
 
@@ -45,36 +67,77 @@ public class PermResult {
      * @param grantResults list of results
      */
     public PermResult(String[] permissions, int[] grantResults) {
-        if ((permissions == null) || (permissions.length == 0) || (grantResults == null) || (grantResults.length == 0)) {
-            mResult = CANCELLED;
-        } else {
-            boolean granted = (grantResults[0] == PackageManager.PERMISSION_GRANTED);
-            mResult = granted ? GRANTED : DENIED;
+        if ((permissions != null) && (grantResults != null) && (permissions.length > 0) && (grantResults.length == permissions.length)) {
+            mResults = new HashMap<>(permissions.length);
+            for(int i=0; i<permissions.length; ++i) {
+                String permissionName = permissions[i];
+                int rawResult = grantResults[i];
+                Result result = new Result(permissionName, rawResult);
+                if (rawResult == PackageManager.PERMISSION_GRANTED) {
+                    result.setResultValue(GRANTED);
+                } else {
+                    result.setResultValue(DENIED);
+                }
+            }
         }
+    }
+
+    /**
+     *
+     * @return true if the permissions have just been granted
+     */
+    public boolean areGranted() {
+        if (mResults == null) {
+            return false;
+        }
+        for(Result result : mResults.values()) {
+            if (!result.isGranted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      *
      * @return true if the permission has just been granted
      */
-    public boolean isGranted() {
-        return (mResult == GRANTED);
+    public boolean isGranted(@NonNull String permissionName) {
+        Result result = mResults.get(permissionName);
+        return ((result != null) && result.isGranted());
     }
 
     /**
      *
-     * @return true if the permission has just been denied
+     * @return true if the permissions have just been denied
      */
-    public boolean isDenied() {
-        return (mResult == DENIED);
+    public boolean areDenied() {
+        if (mResults == null) {
+            return false;
+        }
+        for(Result result : mResults.values()) {
+            if (!result.isDenied()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     *
+     * @return true if the permission has just been granted
+     */
+    public boolean isDenied(@NonNull String permissionName) {
+        Result result = mResults.get(permissionName);
+        return ((result != null) && result.isDenied());
     }
 
     /**
      *
      * @return true if the permission process has been cancelled
      */
-    public boolean isCancelled() {
-        return (mResult == CANCELLED);
+    public boolean areCancelled() {
+        return (mResults == null);
     }
 
 
