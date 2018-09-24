@@ -84,7 +84,7 @@ Add the libary dependency to your **APP** build.gradle file
 
 ```
 dependencies {
-    implement 'com.github.smart-fun:Perm:1.1.1'    // add this line
+    implementation 'com.github.smart-fun:Perm:1.1.2'    // add this line
 }
 ```
 
