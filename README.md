@@ -1,4 +1,4 @@
-#Perm for Android#
+# Perm for Android #
 
 **Perm** is a library that makes it simple to **check and request Android Permissions** at runtime (like Camera or GPS) for Apps targetting Android 6 or more.
 
@@ -69,7 +69,7 @@ Don't forget to add the required permissions in your **AndroidManifest.xml** fil
         android:name="android.permission.READ_CONTACTS" />
 ```
 
-## Installation with gradle
+## Installation with gradle ##
 
 Add the following maven{} line to your **PROJECT** build.gradle file
 
@@ -90,7 +90,7 @@ dependencies {
 }
 ```
 
-##License##
+## License ##
 
 Copyright 2016-2019 Arnaud Guyon
 
