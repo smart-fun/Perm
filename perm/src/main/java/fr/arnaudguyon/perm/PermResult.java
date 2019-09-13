@@ -16,11 +16,10 @@
 package fr.arnaudguyon.perm;
 
 import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.HashMap;
 
-import static fr.arnaudguyon.perm.PermResult.ResultValue.CANCELLED;
 import static fr.arnaudguyon.perm.PermResult.ResultValue.DENIED;
 import static fr.arnaudguyon.perm.PermResult.ResultValue.GRANTED;
 
