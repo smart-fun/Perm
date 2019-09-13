@@ -16,11 +16,14 @@
 package fr.arnaudguyon.perm;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import android.text.TextUtils;
+import androidx.fragment.app.Fragment;
 
 /**
  * Helper to Check or Request Android Permissions
@@ -29,6 +32,7 @@ import android.text.TextUtils;
 public class Perm {
 
     private Activity mActivity;
+    private Fragment mFragment;
     private String[] mNames;
 
     /**
@@ -51,6 +55,22 @@ public class Perm {
      * @param androidPermission Android Permission like Manifest.permission.CAMERA or Manifest.permission.ACCESS_FINE_LOCATION
      */
     public Perm(@NonNull Activity activity, @NonNull String... androidPermission) {
+        this(androidPermission);
+        mActivity = activity;
+    }
+
+    /**
+     * Constructor
+     *
+     * @param fragment          an androidx Fragment
+     * @param androidPermission Android Permission like Manifest.permission.CAMERA or Manifest.permission.ACCESS_FINE_LOCATION
+     */
+    public Perm(@NonNull Fragment fragment, @NonNull String... androidPermission) {
+        this(androidPermission);
+        mFragment = fragment;
+    }
+
+    private Perm(@NonNull String... androidPermission) {
         if (androidPermission.length == 0) {
             throw new PermException("Provide at least 1 Android permission");
         } else {
@@ -58,7 +78,6 @@ public class Perm {
                 checkPermissionName(permissionName);
             }
         }
-        mActivity = activity;
         mNames = androidPermission;
     }
 
@@ -66,8 +85,9 @@ public class Perm {
      * @return true if the all the Permissions are already Granted
      */
     public boolean areGranted() {
+        Context context = (mActivity != null) ? mActivity : mFragment.getContext();
         for (String permission : mNames) {
-            if (ContextCompat.checkSelfPermission(mActivity, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
@@ -78,8 +98,9 @@ public class Perm {
      * @return true if the Permission permissionName is already Granted
      */
     public boolean isGranted(@NonNull String permissionName) {
+        Context context = (mActivity != null) ? mActivity : mFragment.getContext();
         checkPermissionName(permissionName);
-        return (ContextCompat.checkSelfPermission(mActivity, permissionName) == PackageManager.PERMISSION_GRANTED);
+        return (ContextCompat.checkSelfPermission(context, permissionName) == PackageManager.PERMISSION_GRANTED);
     }
 
     /**
@@ -99,8 +120,13 @@ public class Perm {
      */
     public boolean isDenied(@NonNull String permissionName) {
         checkPermissionName(permissionName);
-        return ((ContextCompat.checkSelfPermission(mActivity, permissionName) == PackageManager.PERMISSION_DENIED)
-                && ActivityCompat.shouldShowRequestPermissionRationale(mActivity, permissionName));
+        if (mActivity != null) {
+            return ((ContextCompat.checkSelfPermission(mActivity, permissionName) == PackageManager.PERMISSION_DENIED)
+                    && ActivityCompat.shouldShowRequestPermissionRationale(mActivity, permissionName));
+        } else {
+            return ((ContextCompat.checkSelfPermission(mFragment.getContext(), permissionName) == PackageManager.PERMISSION_DENIED)
+                    && mFragment.shouldShowRequestPermissionRationale(permissionName));
+        }
     }
 
     /**
@@ -109,7 +135,11 @@ public class Perm {
      * @param requestCode user code that could be useful to differentiate several requests
      */
     public void askPermissions(int requestCode) {
-        ActivityCompat.requestPermissions(mActivity, mNames, requestCode);
+        if (mActivity != null) {
+            ActivityCompat.requestPermissions(mActivity, mNames, requestCode);
+        } else {
+            mFragment.requestPermissions(mNames, requestCode);
+        }
     }
 
     private void checkPermissionName(String permissionName) {
